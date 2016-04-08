@@ -343,9 +343,9 @@
                     message = 'An error has occurred with the ' + field.display + ' field.';
 
                 if (source) {
-                    var data = {'field': field.display};
+                    var data = {'field': this.i18n.t(field.display)};
                     if (param) {
-                       data['param'] = (this.fields[param]) ? this.fields[param].display : param;
+                       data['param'] = (this.fields[param]) ? this.i18n.t(this.fields[param].display) : param;
                     }
                     message = this.i18n.t(method, data);
                 }
