@@ -14,33 +14,33 @@
 
     var defaults = {
         messages: {
-            required: 'The %s field is required.',
-            matches: 'The %s field does not match the %s field.',
-            "default": 'The %s field is still set to default, please change.',
-            valid_email: 'The %s field must contain a valid email address.',
-            valid_emails: 'The %s field must contain all valid email addresses.',
-            min_length: 'The %s field must be at least %s characters in length.',
-            max_length: 'The %s field must not exceed %s characters in length.',
-            exact_length: 'The %s field must be exactly %s characters in length.',
-            greater_than: 'The %s field must contain a number greater than %s.',
-            less_than: 'The %s field must contain a number less than %s.',
-            alpha: 'The %s field must only contain alphabetical characters.',
-            alpha_numeric: 'The %s field must only contain alpha-numeric characters.',
-            alpha_dash: 'The %s field must only contain alpha-numeric characters, underscores, and dashes.',
-            numeric: 'The %s field must contain only numbers.',
-            integer: 'The %s field must contain an integer.',
-            decimal: 'The %s field must contain a decimal number.',
-            is_natural: 'The %s field must contain only positive numbers.',
-            is_natural_no_zero: 'The %s field must contain a number greater than zero.',
-            valid_ip: 'The %s field must contain a valid IP.',
-            valid_base64: 'The %s field must contain a base64 string.',
-            valid_credit_card: 'The %s field must contain a valid credit card number.',
-            is_file_type: 'The %s field must contain only %s files.',
-            valid_url: 'The %s field must contain a valid URL.',
-            greater_than_date: 'The %s field must contain a more recent date than %s.',
-            less_than_date: 'The %s field must contain an older date than %s.',
-            greater_than_or_equal_date: 'The %s field must contain a date that\'s at least as recent as %s.',
-            less_than_or_equal_date: 'The %s field must contain a date that\'s %s or older.'
+            required: 'The %{field} field is required.',
+            matches: 'The %{field} field does not match the %{param} field.',
+            "default": 'The %{field} field is still set to default, please change.',
+            valid_email: 'The %{field} field must contain a valid email address.',
+            valid_emails: 'The %{field} field must contain all valid email addresses.',
+            min_length: 'The %{field} field must be at least %{param} characters in length.',
+            max_length: 'The %{field} field must not exceed %{param} characters in length.',
+            exact_length: 'The %{field} field must be exactly %{param} characters in length.',
+            greater_than: 'The %{field} field must contain a number greater than %{param}.',
+            less_than: 'The %{field} field must contain a number less than %{param}.',
+            alpha: 'The %{field} field must only contain alphabetical characters.',
+            alpha_numeric: 'The %{field} field must only contain alpha-numeric characters.',
+            alpha_dash: 'The %{field} field must only contain alpha-numeric characters, underscores, and dashes.',
+            numeric: 'The %{field} field must contain only numbers.',
+            integer: 'The %{field} field must contain an integer.',
+            decimal: 'The %{field} field must contain a decimal number.',
+            is_natural: 'The %{field} field must contain only positive numbers.',
+            is_natural_no_zero: 'The %{field} field must contain a number greater than zero.',
+            valid_ip: 'The %{field} field must contain a valid IP.',
+            valid_base64: 'The %{field} field must contain a base64 string.',
+            valid_credit_card: 'The %{field} field must contain a valid credit card number.',
+            is_file_type: 'The %{field} field must contain only %{param} files.',
+            valid_url: 'The %{field} field must contain a valid URL.',
+            greater_than_date: 'The %{field} field must contain a more recent date than %{param}.',
+            less_than_date: 'The %{field} field must contain an older date than %{param}.',
+            greater_than_or_equal_date: 'The %{field} field must contain a date that\'s at least as recent as %{param}.',
+            less_than_or_equal_date: 'The %{field} field must contain a date that\'s %{param} or older.'
         },
         callback: function(errors) {
 
@@ -89,6 +89,7 @@
         this.messages = {};
         this.handlers = {};
         this.conditionals = {};
+        this.i18n = new Polyglot({locale:"en", phrases:defaults.messages});
 
         for (var i = 0, fieldLength = fields.length; i < fieldLength; i++) {
             var field = fields[i];
@@ -152,48 +153,6 @@
 
     FormValidator.prototype.setMessage = function(rule, message) {
         this.messages[rule] = message;
-
-        // return this for chaining
-        return this;
-    };
-    
-    /*
-     * @public
-     *
-     * @param fields - Array - [{
-     *     name: The name of the element (i.e. <input name="myField" />)
-     *     display: 'Field Name'
-     *     rules: required|matches[password_confirm]
-     * }]
-     * Sets new custom validation rules set
-     */
-
-    FormValidator.prototype.setRules = function(fields) {
-        this.fields = {};
-        
-        for (var i = 0, fieldLength = fields.length; i < fieldLength; i++) {
-            var field = fields[i];
-
-            // If passed in incorrectly, we need to skip the field.
-            if ((!field.name && !field.names) || !field.rules) {
-                console.warn('validate.js: The following field is being skipped due to a misconfiguration:');
-                console.warn(field);
-                console.warn('Check to ensure you have properly configured a name and rules for this field');
-                continue;
-            }
-
-            /*
-             * Build the master fields array that has all the information needed to validate
-             */
-
-            if (field.names) {
-                for (var j = 0, fieldNamesLength = field.names.length; j < fieldNamesLength; j++) {
-                    this._addField(field, field.names[j]);
-                }
-            } else {
-                this._addField(field, field.name);
-            }
-        }
 
         // return this for chaining
         return this;
@@ -380,15 +339,15 @@
 
             if (failed) {
                 // Make sure we have a message for this rule
-                var source = this.messages[field.name + '.' + method] || this.messages[method] || defaults.messages[method],
+                var source = this.i18n.phrases[method] || this.messages[field.name + '.' + method] || this.messages[method] || defaults.messages[method],
                     message = 'An error has occurred with the ' + field.display + ' field.';
 
                 if (source) {
-                    message = source.replace('%s', field.display);
-
+                    var data = {'field': field.display};
                     if (param) {
-                        message = message.replace('%s', (this.fields[param]) ? this.fields[param].display : param);
+                       data['param'] = (this.fields[param]) ? this.fields[param].display : param;
                     }
+                    message = this.i18n.t(method, data);
                 }
 
                 var existingError;
